@@ -1,5 +1,6 @@
 package com.jpigeon.ridebattlebattlefight;
 
+import com.jpigeon.ridebattlebattlefight.item.RideBattleItems;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -16,16 +17,19 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import software.bernie.geckolib.GeckoLib;
 
 @Mod(RideBattleBattleFight.MODID)
 public class RideBattleBattleFight {
-    public static final String MODID = "examplemod";
+    public static final String MODID = "ridebattlebattlefight";
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public RideBattleBattleFight(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
 
         NeoForge.EVENT_BUS.register(this);
+
+        RideBattleItems.register(modEventBus);
 
         modEventBus.addListener(this::addCreative);
 

@@ -1,6 +1,7 @@
 package com.jpigeon.ridebattlebattlefight;
 
-import com.jpigeon.ridebattlebattlefight.item.RideBattleItems;
+import com.jpigeon.ridebattlebattlefight.item.BattleFightItems;
+import com.jpigeon.ridebattlebattlefight.rider.BattleFightRiders;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -17,19 +18,18 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import software.bernie.geckolib.GeckoLib;
 
 @Mod(RideBattleBattleFight.MODID)
 public class RideBattleBattleFight {
     public static final String MODID = "ridebattlebattlefight";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public RideBattleBattleFight(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
 
         NeoForge.EVENT_BUS.register(this);
 
-        RideBattleItems.register(modEventBus);
+        BattleFightItems.register(modEventBus);
 
         modEventBus.addListener(this::addCreative);
 
@@ -38,6 +38,7 @@ public class RideBattleBattleFight {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("HELLO FROM COMMON SETUP");
+
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
@@ -51,6 +52,7 @@ public class RideBattleBattleFight {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
+            BattleFightRiders.init();
         }
     }
 }

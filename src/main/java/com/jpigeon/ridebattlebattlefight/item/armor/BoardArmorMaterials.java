@@ -1,7 +1,7 @@
 package com.jpigeon.ridebattlebattlefight.item.armor;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
-import com.jpigeon.ridebattlebattlefight.item.RideBattleItems;
+import com.jpigeon.ridebattlebattlefight.item.BattleFightItems;
 import net.minecraft.Util;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -19,7 +19,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class BladeArmorMaterials {
+public class BoardArmorMaterials {
     public static final Holder<ArmorMaterial> BOARD_SYSTEM_MATERIAL = register("board",
             Util.make(new EnumMap<>(ArmorItem.Type.class), attribute -> {
                 attribute.put(ArmorItem.Type.BOOTS, 3);
@@ -27,7 +27,7 @@ public class BladeArmorMaterials {
                 attribute.put(ArmorItem.Type.CHESTPLATE, 8);
                 attribute.put(ArmorItem.Type.HELMET, 3);
                 attribute.put(ArmorItem.Type.BODY, 7);
-            }), 16, 2f, 0.1f, () -> RideBattleItems.ORIHALCON_ELEMENT.get());
+            }), 16, 2f, 0.1f, () -> BattleFightItems.ORIHALCON_ELEMENT.get());
 
 
     private static Holder<ArmorMaterial> register(String name, EnumMap<ArmorItem.Type, Integer> typeProtection,

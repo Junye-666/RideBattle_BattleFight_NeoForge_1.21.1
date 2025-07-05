@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlebattlefight.item.client;
+package com.jpigeon.ridebattlebattlefight.item.armor.client;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
 import com.jpigeon.ridebattlebattlefight.item.armor.blade.BladeArmorItem;

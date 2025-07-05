@@ -1,7 +1,14 @@
 package com.jpigeon.ridebattlebattlefight;
 
+import com.jpigeon.ridebattlebattlefight.entity.BoardEntities;
+import com.jpigeon.ridebattlebattlefight.entity.client.OrihalconBeetleModel;
+import com.jpigeon.ridebattlebattlefight.entity.client.OrihalconBeetleRenderer;
+import com.jpigeon.ridebattlebattlefight.henshin.BoardHenshinHandler;
 import com.jpigeon.ridebattlebattlefight.item.BattleFightItems;
-import com.jpigeon.ridebattlebattlefight.rider.BattleFightRiders;
+import com.jpigeon.ridebattlebattlefight.network.BoardPacketHandler;
+import com.jpigeon.ridebattlebattlefight.rider.BoardRiders;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -26,18 +33,23 @@ public class RideBattleBattleFight {
 
     public RideBattleBattleFight(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(BoardPacketHandler::register);
 
         NeoForge.EVENT_BUS.register(this);
 
         BattleFightItems.register(modEventBus);
+        BoardEntities.register(modEventBus);
+
+        NeoForge.EVENT_BUS.register(new BoardHenshinHandler());
 
         modEventBus.addListener(this::addCreative);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+
+        NeoForge.EVENT_BUS.addListener(this::onServerStarting);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        LOGGER.info("HELLO FROM COMMON SETUP");
 
     }
 
@@ -46,13 +58,27 @@ public class RideBattleBattleFight {
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
+
     }
 
     @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-            BattleFightRiders.init();
+            BoardRiders.init();
+        }
+
+        @SubscribeEvent
+        public static void registerAttributes(EntityAttributeCreationEvent event) {
+            BoardEntities.registerAttributes(event);
+        }
+
+        @SubscribeEvent
+        public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+            event.registerEntityRenderer(
+                    BoardEntities.ORIHALCON_BEETLE.get(),
+                    context -> new OrihalconBeetleRenderer(context, new OrihalconBeetleModel())
+            );
         }
     }
 }

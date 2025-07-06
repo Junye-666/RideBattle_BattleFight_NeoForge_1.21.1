@@ -18,7 +18,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -29,9 +28,11 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+// 奥利哈刚甲虫
 public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private static final int MAX_LIFETIME = 200; // 10秒存在时间
@@ -39,6 +40,9 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
     @Nullable
     private UUID ownerUUID;
     private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(OrihalconBeetleEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    // 弹开实体作用
+    private boolean hasPushedEntities = false;
+
 
     public OrihalconBeetleEntity(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
@@ -46,6 +50,7 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
         this.setInvulnerable(true);
     }
 
+    //==========GeckoLib==========
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this,
@@ -59,6 +64,7 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
         return PlayState.CONTINUE;
     }
 
+    //==========功能==========
 
     @Override
     public void tick() {
@@ -71,6 +77,12 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
             this.discard();
             return;
         }
+
+        if (!hasPushedEntities && lifetime > 0) {
+            pushNearbyEntities();
+            hasPushedEntities = true;
+        }
+
         Player owner = getOwner();
         if (owner == null) {
             if (lifetime > 20) {
@@ -109,6 +121,59 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
         }
     }
 
+    private boolean isPlayerColliding(Player player) {
+        return player.getBoundingBox().intersects(this.getBoundingBox());
+    }
+
+    public static AttributeSupplier.Builder createAttributes() {
+        return LivingEntity.createLivingAttributes()
+                .add(Attributes.MAX_HEALTH, 1.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.0)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0);
+    }
+
+    private void pushNearbyEntities() {
+        Player owner = getOwner();
+        if (owner == null) return;
+
+        // 获取4格半径内的生物（排除自己和owner）
+        List<LivingEntity> entities = level().getEntitiesOfClass(LivingEntity.class,
+                this.getBoundingBox().inflate(4.0),
+                e -> e != this && e != owner
+        );
+
+        for (LivingEntity entity : entities) {
+            // 计算弹开方向（从实体指向远离玩家的方向）
+            Vec3 awayDirection = entity.position()
+                    .subtract(owner.position())
+                    .normalize()
+                    .scale(1.5); // 弹开力度
+
+            // 应用击退效果
+            entity.setDeltaMovement(
+                    awayDirection.x,
+                    Math.min(0.5, awayDirection.y + 0.25), // 轻微上抛
+                    awayDirection.z
+            );
+            entity.hurtMarked = true; // 强制同步移动
+        }
+
+        // 播放音效
+        level().playSound(null, blockPosition(),
+                SoundEvents.PLAYER_ATTACK_KNOCKBACK,
+                SoundSource.PLAYERS, 1.0F, 1.2F);
+    }
+
+    //==========Setter方法==========
+
+    public void setOwner(@Nullable Player player) {
+        if (player != null) {
+            this.entityData.set(OWNER_UUID, Optional.of(player.getUUID()));
+        } else {
+            this.entityData.set(OWNER_UUID, Optional.empty());
+        }
+    }
+
     public void setFacingPlayer(Player player) {
         // 计算玩家到实体的向量
         Vec3 toEntity = this.position().subtract(player.position());
@@ -124,29 +189,27 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
         this.refreshDimensions();
     }
 
-    private boolean isPlayerColliding(Player player) {
-        return player.getBoundingBox().intersects(this.getBoundingBox());
-    }
-
-    public static AttributeSupplier.Builder createAttributes() {
-        return LivingEntity.createLivingAttributes()
-                .add(Attributes.MAX_HEALTH, 1.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.0)
-                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0);
-    }
-
-    public void setOwner(@Nullable Player player) {
-        if (player != null) {
-            this.entityData.set(OWNER_UUID, Optional.of(player.getUUID()));
-        } else {
-            this.entityData.set(OWNER_UUID, Optional.empty());
-        }
-    }
-
     @Override
     protected void defineSynchedData(SynchedEntityData.@NotNull Builder builder) {
         super.defineSynchedData(builder);
         builder.define(OWNER_UUID, Optional.empty());
+    }
+
+    @Override
+    public void addAdditionalSaveData(@NotNull CompoundTag tag) {
+        entityData.get(OWNER_UUID).ifPresent(uuid -> tag.putUUID("OwnerUUID", uuid));
+    }
+
+    @Override
+    public void setItemSlot(@NotNull EquipmentSlot slot, @NotNull ItemStack stack) {
+    }
+
+    //==========Getter方法==========
+
+    @Nullable
+    public Player getOwner() {
+        Optional<UUID> uuid = this.entityData.get(OWNER_UUID);
+        return uuid.map(value -> level().getPlayerByUUID(value)).orElse(null);
     }
 
     @Override
@@ -155,12 +218,6 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
             this.entityData.set(OWNER_UUID, Optional.of(tag.getUUID("OwnerUUID")));
         }
     }
-
-    @Override
-    public void addAdditionalSaveData(@NotNull CompoundTag tag) {
-        entityData.get(OWNER_UUID).ifPresent(uuid -> tag.putUUID("OwnerUUID", uuid));
-    }
-
 
 
     @Override
@@ -171,10 +228,6 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
     @Override
     public @NotNull ItemStack getItemBySlot(@NotNull EquipmentSlot slot) {
         return ItemStack.EMPTY;
-    }
-
-    @Override
-    public void setItemSlot(@NotNull EquipmentSlot slot, @NotNull ItemStack stack) {
     }
 
     @Override
@@ -190,11 +243,5 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
     @Override
     public double getTick(Object o) {
         return 0;
-    }
-
-    @Nullable
-    public Player getOwner() {
-        Optional<UUID> uuid = this.entityData.get(OWNER_UUID);
-        return uuid.map(value -> level().getPlayerByUUID(value)).orElse(null);
     }
 }

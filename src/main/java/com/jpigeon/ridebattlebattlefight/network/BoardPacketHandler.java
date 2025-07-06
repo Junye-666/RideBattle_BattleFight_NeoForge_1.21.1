@@ -78,7 +78,7 @@ public class BoardPacketHandler {
         // 计算位置
         Vec3 look = player.getLookAngle();
         Vec3 spawnPos = player.position()
-                .add(look.x * 3.0, 0, look.z * 3.0);
+                .add(look.x * 4.0, 0, look.z * 4.0);
 
 
         ServerLevel level = player.serverLevel();

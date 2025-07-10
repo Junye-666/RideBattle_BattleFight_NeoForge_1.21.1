@@ -1,9 +1,8 @@
-package com.jpigeon.ridebattlebattlefight.item;
+package com.jpigeon.ridebattlebattlefight.core.item;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
 
-import com.jpigeon.ridebattlebattlefight.item.armor.BoardArmorMaterials;
-import com.jpigeon.ridebattlebattlefight.item.armor.blade.BladeArmorItem;
+import com.jpigeon.ridebattlebattlefight.core.rider.blade.BladeArmorItem;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;

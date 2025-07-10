@@ -1,9 +1,9 @@
-package com.jpigeon.ridebattlebattlefight.network;
+package com.jpigeon.ridebattlebattlefight.core.system.network;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
-import com.jpigeon.ridebattlebattlefight.entity.BoardEntities;
-import com.jpigeon.ridebattlebattlefight.entity.custom.OrihalconBeetleEntity;
-import com.jpigeon.ridebattlebattlefight.network.packet.BladeHenshinPacket;
+import com.jpigeon.ridebattlebattlefight.core.entity.orihalcon.OrihalconBeetle;
+import com.jpigeon.ridebattlebattlefight.core.system.BoardEntities;
+import com.jpigeon.ridebattlebattlefight.core.system.network.packet.BladeHenshinPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
@@ -61,8 +61,8 @@ public class BoardPacketHandler {
             return;
         }
 
-        List<OrihalconBeetleEntity> existing = player.serverLevel()
-                .getEntitiesOfClass(OrihalconBeetleEntity.class,
+        List<OrihalconBeetle> existing = player.serverLevel()
+                .getEntitiesOfClass(OrihalconBeetle.class,
                         player.getBoundingBox().inflate(20),
                         e -> player.equals(e.getOwner())
                 );
@@ -78,11 +78,11 @@ public class BoardPacketHandler {
         // 计算位置
         Vec3 look = player.getLookAngle();
         Vec3 spawnPos = player.position()
-                .add(look.x * 4.0, 0, look.z * 4.0);
+                .add(look.x * 6.0, 0, look.z * 6.0);
 
 
         ServerLevel level = player.serverLevel();
-        OrihalconBeetleEntity entity = new OrihalconBeetleEntity(
+        OrihalconBeetle entity = new OrihalconBeetle(
                 BoardEntities.ORIHALCON_BEETLE.get(),
                 level
         );
@@ -93,7 +93,6 @@ public class BoardPacketHandler {
         entity.lookAt(EntityAnchorArgument.Anchor.EYES, player.position().add(0, player.getEyeHeight(), 0));
 
 
-
         if (level.addFreshEntity(entity)) {
             lastSummonTime.put(player.getUUID(), currentTime);
             RideBattleBattleFight.LOGGER.info("服务器成功生成Orihalcon实体，所有者: {}", player.getName().getString());
@@ -102,7 +101,7 @@ public class BoardPacketHandler {
             level.playSound(
                     null,
                     player.blockPosition(),
-                    SoundEvents.AMETHYST_BLOCK_CHIME,
+                    SoundEvents.AMETHYST_CLUSTER_HIT,
                     SoundSource.PLAYERS,
                     1.0f,
                     1.0f

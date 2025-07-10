@@ -1,7 +1,6 @@
-package com.jpigeon.ridebattlebattlefight.item.armor;
+package com.jpigeon.ridebattlebattlefight.core.item;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
-import com.jpigeon.ridebattlebattlefight.item.BattleFightItems;
 import net.minecraft.Util;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -27,7 +26,7 @@ public class BoardArmorMaterials {
                 attribute.put(ArmorItem.Type.CHESTPLATE, 8);
                 attribute.put(ArmorItem.Type.HELMET, 3);
                 attribute.put(ArmorItem.Type.BODY, 7);
-            }), 16, 2f, 0.1f, () -> BattleFightItems.ORIHALCON_ELEMENT.get());
+            }), 16, 2f, 0.1f, BattleFightItems.ORIHALCON_ELEMENT);
 
 
     private static Holder<ArmorMaterial> register(String name, EnumMap<ArmorItem.Type, Integer> typeProtection,

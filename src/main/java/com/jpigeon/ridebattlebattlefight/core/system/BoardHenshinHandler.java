@@ -1,9 +1,9 @@
-package com.jpigeon.ridebattlebattlefight.henshin;
+package com.jpigeon.ridebattlebattlefight.core.system;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
-import com.jpigeon.ridebattlebattlefight.network.BoardPacketHandler;
-import com.jpigeon.ridebattlebattlefight.network.packet.BladeHenshinPacket;
-import com.jpigeon.ridebattlebattlefight.rider.BoardRiders;
+import com.jpigeon.ridebattlebattlefight.core.system.network.BoardPacketHandler;
+import com.jpigeon.ridebattlebattlefight.core.system.network.packet.BladeHenshinPacket;
+import com.jpigeon.ridebattlebattlefight.core.rider.blade.BladeConfig;
 import com.jpigeon.ridebattlelib.core.system.event.HenshinEvent;
 
 import com.jpigeon.ridebattlelib.core.system.henshin.HenshinSystem;
@@ -15,7 +15,7 @@ public class BoardHenshinHandler {
     public void onHenshin(HenshinEvent.Pre event) {
         if (HenshinSystem.INSTANCE.isTransformed(event.getPlayer())) return;
         // 只处理剑的变身事件
-        if (!event.getRiderId().equals(BoardRiders.KAMEN_RIDER_BLADE)) {
+        if (!event.getRiderId().equals(BladeConfig.KAMEN_RIDER_BLADE)) {
             RideBattleBattleFight.LOGGER.debug("不是剑的变身");
             return;
         }

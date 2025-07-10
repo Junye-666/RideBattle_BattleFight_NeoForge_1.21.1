@@ -1,7 +1,7 @@
-package com.jpigeon.ridebattlebattlefight.entity;
+package com.jpigeon.ridebattlebattlefight.core.system;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
-import com.jpigeon.ridebattlebattlefight.entity.custom.OrihalconBeetleEntity;
+import com.jpigeon.ridebattlebattlefight.core.entity.orihalcon.OrihalconBeetle;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -15,10 +15,10 @@ public class BoardEntities {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
             DeferredRegister.create(BuiltInRegistries.ENTITY_TYPE, RideBattleBattleFight.MODID);
 
-    public static final Supplier<EntityType<OrihalconBeetleEntity>> ORIHALCON_BEETLE =
+    public static final Supplier<EntityType<OrihalconBeetle>> ORIHALCON_BEETLE =
             ENTITY_TYPES.register("orihalcon_beetle",
-                    () -> EntityType.Builder.of(OrihalconBeetleEntity::new, MobCategory.MISC)
-                            .sized(0.5f, 2.0f) // 碰撞箱尺寸
+                    () -> EntityType.Builder.of(OrihalconBeetle::new, MobCategory.MISC)
+                            .sized(1f, 2.0f) // 碰撞箱尺寸
                             .clientTrackingRange(32)
                             .build("orihalcon_beetle")
             );
@@ -28,7 +28,7 @@ public class BoardEntities {
     }
 
     public static void registerAttributes(EntityAttributeCreationEvent event) {
-        event.put(ORIHALCON_BEETLE.get(), OrihalconBeetleEntity.createAttributes().build());
+        event.put(ORIHALCON_BEETLE.get(), OrihalconBeetle.createAttributes().build());
     }
 
 }

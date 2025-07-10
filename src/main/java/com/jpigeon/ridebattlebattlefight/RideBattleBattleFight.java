@@ -1,12 +1,12 @@
 package com.jpigeon.ridebattlebattlefight;
 
-import com.jpigeon.ridebattlebattlefight.entity.BoardEntities;
-import com.jpigeon.ridebattlebattlefight.entity.client.OrihalconBeetleModel;
-import com.jpigeon.ridebattlebattlefight.entity.client.OrihalconBeetleRenderer;
-import com.jpigeon.ridebattlebattlefight.henshin.BoardHenshinHandler;
-import com.jpigeon.ridebattlebattlefight.item.BattleFightItems;
-import com.jpigeon.ridebattlebattlefight.network.BoardPacketHandler;
-import com.jpigeon.ridebattlebattlefight.rider.BoardRiders;
+import com.jpigeon.ridebattlebattlefight.core.system.BoardEntities;
+import com.jpigeon.ridebattlebattlefight.client.model.OrihalconBeetleModel;
+import com.jpigeon.ridebattlebattlefight.client.renderer.OrihalconBeetleRenderer;
+import com.jpigeon.ridebattlebattlefight.core.system.BoardHenshinHandler;
+import com.jpigeon.ridebattlebattlefight.core.item.BattleFightItems;
+import com.jpigeon.ridebattlebattlefight.core.system.network.BoardPacketHandler;
+import com.jpigeon.ridebattlebattlefight.core.rider.blade.BladeConfig;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import org.slf4j.Logger;
@@ -65,7 +65,7 @@ public class RideBattleBattleFight {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-            BoardRiders.init();
+            BladeConfig.init();
         }
 
         @SubscribeEvent

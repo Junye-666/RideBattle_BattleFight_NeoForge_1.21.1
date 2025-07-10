@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlebattlefight.network.packet;
+package com.jpigeon.ridebattlebattlefight.core.system.network.packet;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
 import com.jpigeon.ridebattlelib.core.system.network.handler.UUIDStreamCodec;

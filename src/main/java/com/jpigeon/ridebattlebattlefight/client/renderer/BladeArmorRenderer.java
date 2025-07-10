@@ -1,7 +1,8 @@
-package com.jpigeon.ridebattlebattlefight.item.armor.client;
+package com.jpigeon.ridebattlebattlefight.client.renderer;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
-import com.jpigeon.ridebattlebattlefight.item.armor.blade.BladeArmorItem;
+import com.jpigeon.ridebattlebattlefight.client.model.BladeArmorModel;
+import com.jpigeon.ridebattlebattlefight.core.rider.blade.BladeArmorItem;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.renderer.GeoArmorRenderer;
 

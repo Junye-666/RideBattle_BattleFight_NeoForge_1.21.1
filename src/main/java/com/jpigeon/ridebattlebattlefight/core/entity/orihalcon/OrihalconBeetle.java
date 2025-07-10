@@ -1,6 +1,6 @@
-package com.jpigeon.ridebattlebattlefight.entity.custom;
+package com.jpigeon.ridebattlebattlefight.core.entity.orihalcon;
 
-import com.jpigeon.ridebattlebattlefight.rider.BoardRiders;
+import com.jpigeon.ridebattlebattlefight.core.rider.blade.BladeConfig;
 import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
 import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
@@ -12,6 +12,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -20,11 +21,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.util.GeckoLibUtil;
+import software.bernie.geckolib.util.RenderUtil;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -33,34 +34,79 @@ import java.util.Optional;
 import java.util.UUID;
 
 // 奥利哈刚甲虫
-public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
+public class OrihalconBeetle extends OrihalconEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private static final int MAX_LIFETIME = 200; // 10秒存在时间
     private int lifetime = 0;
     @Nullable
     private UUID ownerUUID;
-    private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(OrihalconBeetleEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(OrihalconBeetle.class, EntityDataSerializers.OPTIONAL_UUID);
     // 弹开实体作用
     private boolean hasPushedEntities = false;
 
 
-    public OrihalconBeetleEntity(EntityType<? extends LivingEntity> entityType, Level level) {
+    public OrihalconBeetle(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
         this.setNoGravity(true);
         this.setInvulnerable(true);
     }
 
     //==========GeckoLib==========
+    public static final RawAnimation ORIHALCON_APPEAR = RawAnimation.begin()
+            .then("appear", Animation.LoopType.PLAY_ONCE); // 明确指定播放一次
+
+    public static final RawAnimation ORIHALCON_IDLE = RawAnimation.begin()
+            .thenLoop("idle"); // 循环播放空闲动画
+
+    public static final RawAnimation ORIHALCON_DISAPPEAR = RawAnimation.begin()
+            .thenPlayAndHold("passTrough"); // 使用playAndHold
+
+    public int disappearTimer = 0;
+    public static final int DISAPPEAR_DURATION = 20; // 1秒消失时间
+    private boolean hasTriggeredTransformation = false; // 确保只触发一次变身
+
+
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this,
-                "controller",
+                "main_controller",
                 0,
-                this::predicate));
+                this::handleAnimations));
     }
 
-    private PlayState predicate(AnimationState<OrihalconBeetleEntity> state) {
-        state.getController().setAnimation(RawAnimation.begin().then("idle", Animation.LoopType.LOOP));
+    public enum AnimState { APPEARING, IDLING, DISAPPEARING }
+    public AnimState animState = AnimState.APPEARING;
+
+    private PlayState handleAnimations(AnimationState<OrihalconBeetle> state) {
+        switch (animState) {
+            case APPEARING:
+                // 初始状态或需要播放出现动画
+                if (!state.isCurrentAnimation(ORIHALCON_APPEAR)) {
+                    state.getController().setAnimation(ORIHALCON_APPEAR);
+                }
+                // 检测动画是否完成
+                if (state.getController().getAnimationState() != AnimationController.State.STOPPED) {
+                    animState = AnimState.IDLING;
+                    state.getController().forceAnimationReset();
+                }
+                break;
+
+            case IDLING:
+                // 确保只设置一次空闲动画
+                if (!state.isCurrentAnimation(ORIHALCON_IDLE)) {
+                    state.getController().setAnimation(ORIHALCON_IDLE);
+                }
+                break;
+
+            case DISAPPEARING:
+                // 确保只设置一次消失动画
+                if (!state.isCurrentAnimation(ORIHALCON_DISAPPEAR)) {
+                    if (state.getController().getAnimationState() != AnimationController.State.STOPPED) {
+                        state.getController().setAnimation(ORIHALCON_DISAPPEAR);
+                    }
+                }
+                break;
+        }
         return PlayState.CONTINUE;
     }
 
@@ -71,10 +117,26 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
         super.tick();
         lifetime++;
 
+        if (animState == AnimState.DISAPPEARING) {
+            disappearTimer--;
+
+            // 动画结束后移除实体
+            if (disappearTimer <= 0) {
+                this.discard();
+                return;
+            }
+        }
+
+        // 如果正在消失，跳过后续逻辑
+        if (animState == AnimState.DISAPPEARING) {
+            return;
+        }
+
         if (lifetime % 5 != 0) return;
-        // 超时消失
+
+        // 超时消失改为触发消失动画
         if (lifetime >= MAX_LIFETIME) {
-            this.discard();
+            startDisappearing();
             return;
         }
 
@@ -86,17 +148,19 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
         Player owner = getOwner();
         if (owner == null) {
             if (lifetime > 20) {
-                discard();
+                startDisappearing();
             }
             return;
         }
+
         if (owner.isRemoved()) {
-            discard();
+            startDisappearing();
             return;
         }
+
         double distance = distanceToSqr(owner);
-        if (distance > 20 * 20) { // 20格外自动消失
-            this.discard();
+        if (distance > 20 * 20) {
+            startDisappearing();
             return;
         }
 
@@ -107,19 +171,64 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
 
         // 使用精确碰撞检测
         if (isPlayerColliding(owner)) {
-            if (!BoardRiders.BLADE_BASE_FORM.equals(data.getPendingFormId())) {
+            if (!BladeConfig.BLADE_BASE_FORM.equals(data.getPendingFormId())) {
                 return;
             }
 
-            if (owner instanceof ServerPlayer serverPlayer) {
+            // 确保只触发一次变身
+            if (!hasTriggeredTransformation && owner instanceof ServerPlayer serverPlayer) {
                 DriverActionManager.INSTANCE.completeTransformation(serverPlayer);
                 serverPlayer.level().playSound(null, serverPlayer.blockPosition(),
                         SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS,
                         1.0f, 1.0f);
+                hasTriggeredTransformation = true;
             }
-            discard();
+
+            // 触发消失动画
+            startDisappearing();
         }
     }
+
+    public void startDisappearing() {
+        if (animState != AnimState.DISAPPEARING) {
+            animState = AnimState.DISAPPEARING;
+            disappearTimer = DISAPPEAR_DURATION;
+            hasTriggeredTransformation = true; // 确保不会再次触发变身
+
+            // 立即停止所有运动
+            this.setDeltaMovement(Vec3.ZERO);
+
+            // 播放消失音效
+            if (!level().isClientSide) {
+                level().playSound(null, blockPosition(),
+                        SoundEvents.ENDERMAN_TELEPORT,
+                        SoundSource.PLAYERS, 0.5f, 1.5f);
+            }
+        }
+    }
+
+    public float getCurrentAlpha() {
+        if (animState == AnimState.DISAPPEARING) {
+            // 使用缓动函数使透明度变化更平滑
+            float progress = (float) disappearTimer / DISAPPEAR_DURATION;
+            // 二次方缓出效果，最后阶段消失更快
+            return progress * progress;
+        }
+        return 0.8f;
+    }
+
+    @Override
+    public boolean isInvisible() {
+        // 当透明度低于0.1时视为不可见
+        return getCurrentAlpha() < 0.1f || super.isInvisible();
+    }
+
+    @Override
+    public boolean shouldRenderAtSqrDistance(double distance) {
+        // 根据透明度调整渲染距离
+        return distance < (4096.0 * getCurrentAlpha());
+    }
+
 
     private boolean isPlayerColliding(Player player) {
         return player.getBoundingBox().intersects(this.getBoundingBox());
@@ -129,7 +238,8 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
         return LivingEntity.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 1.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.0)
-                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0);
+                .add(Attributes.KNOCKBACK_RESISTANCE, 100.0)
+                .add(Attributes.FOLLOW_RANGE, 0.0);
     }
 
     private void pushNearbyEntities() {
@@ -200,10 +310,6 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
         entityData.get(OWNER_UUID).ifPresent(uuid -> tag.putUUID("OwnerUUID", uuid));
     }
 
-    @Override
-    public void setItemSlot(@NotNull EquipmentSlot slot, @NotNull ItemStack stack) {
-    }
-
     //==========Getter方法==========
 
     @Nullable
@@ -218,23 +324,6 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
             this.entityData.set(OWNER_UUID, Optional.of(tag.getUUID("OwnerUUID")));
         }
     }
-
-
-    @Override
-    public @NotNull Iterable<ItemStack> getArmorSlots() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public @NotNull ItemStack getItemBySlot(@NotNull EquipmentSlot slot) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public @NotNull HumanoidArm getMainArm() {
-        return HumanoidArm.RIGHT;
-    }
-
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
@@ -242,6 +331,51 @@ public class OrihalconBeetleEntity extends LivingEntity implements GeoEntity {
 
     @Override
     public double getTick(Object o) {
-        return 0;
+        return RenderUtil.getCurrentTick();
+    }
+
+    @Override
+    public void push(@NotNull Entity entity) {
+        // 完全禁用实体间的推动
+    }
+
+    @Override
+    public void push(double x, double y, double z) {
+        // 禁用所有外力推动
+    }
+
+    @Override
+    public boolean canBeCollidedWith() {
+        return false;
+    }
+
+    @Override
+    public boolean isPickable() {
+        return false;
+    }
+
+    // 被迫实现
+    @Override
+    public @NotNull HumanoidArm getMainArm() {
+        return HumanoidArm.RIGHT;
+    }
+
+    @Override
+    public boolean hurt(@NotNull DamageSource source, float amount) {
+        return false;
+    }
+
+    @Override
+    public @NotNull Iterable<ItemStack> getArmorSlots() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public @NotNull ItemStack getItemBySlot(@NotNull EquipmentSlot equipmentSlot) {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public void setItemSlot(@NotNull EquipmentSlot equipmentSlot, @NotNull ItemStack itemStack) {
     }
 }

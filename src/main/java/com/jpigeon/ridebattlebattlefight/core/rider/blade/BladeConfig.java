@@ -1,7 +1,7 @@
-package com.jpigeon.ridebattlebattlefight.rider;
+package com.jpigeon.ridebattlebattlefight.core.rider.blade;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
-import com.jpigeon.ridebattlebattlefight.item.BattleFightItems;
+import com.jpigeon.ridebattlebattlefight.core.item.BattleFightItems;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
@@ -14,7 +14,7 @@ import net.minecraft.world.item.Items;
 
 import java.util.List;
 
-public class BoardRiders {
+public class BladeConfig {
     // 骑士Id
     public static final ResourceLocation KAMEN_RIDER_BLADE =
             ResourceLocation.fromNamespaceAndPath(RideBattleBattleFight.MODID, "kamen_rider_blade");

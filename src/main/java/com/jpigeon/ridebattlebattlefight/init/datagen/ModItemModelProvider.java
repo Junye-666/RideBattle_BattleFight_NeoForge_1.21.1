@@ -1,7 +1,7 @@
-package com.jpigeon.ridebattlebattlefight.datagen;
+package com.jpigeon.ridebattlebattlefight.init.datagen;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
-import com.jpigeon.ridebattlebattlefight.item.BattleFightItems;
+import com.jpigeon.ridebattlebattlefight.core.item.BattleFightItems;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;

@@ -1,6 +1,6 @@
-package com.jpigeon.ridebattlebattlefight.item.armor.blade;
+package com.jpigeon.ridebattlebattlefight.core.rider.blade;
 
-import com.jpigeon.ridebattlebattlefight.item.armor.client.BladeArmorRenderer;
+import com.jpigeon.ridebattlebattlefight.client.renderer.BladeArmorRenderer;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.core.Holder;
 import net.minecraft.world.entity.EquipmentSlot;

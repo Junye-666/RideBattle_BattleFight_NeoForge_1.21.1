@@ -1,4 +1,4 @@
-package com.jpigeon.ridebattlebattlefight.datagen;
+package com.jpigeon.ridebattlebattlefight.init.datagen;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
 import net.minecraft.core.HolderLookup;

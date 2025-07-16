@@ -142,7 +142,8 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
-    implementation files("libs/ridebattlelib-0.9.4.jar")
+    implementation files("libs/ridebattlelib-0.9.6.jar")
+    implementation files("libs/player-animation-lib-forge-2.0.1+1.21.1.jar")
     implementation "software.bernie.geckolib:geckolib-neoforge-${minecraft_version}:${geckolib_version}"
 }
 
@@ -197,4 +198,8 @@ idea {
         downloadSources = true
         downloadJavadoc = true
     }
+}
+
+jar{
+    from sourceSets.main.output
 }

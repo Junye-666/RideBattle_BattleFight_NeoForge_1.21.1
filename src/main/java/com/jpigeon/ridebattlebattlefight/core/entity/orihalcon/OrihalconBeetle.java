@@ -1,8 +1,8 @@
 package com.jpigeon.ridebattlebattlefight.core.entity.orihalcon;
 
 import com.jpigeon.ridebattlebattlefight.core.rider.blade.BladeConfig;
-import com.jpigeon.ridebattlelib.core.system.attachment.ModAttachments;
-import com.jpigeon.ridebattlelib.core.system.attachment.PlayerPersistentData;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderAttachments;
+import com.jpigeon.ridebattlelib.core.system.attachment.RiderData;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.DriverActionManager;
 import com.jpigeon.ridebattlelib.core.system.henshin.helper.HenshinState;
 import net.minecraft.nbt.CompoundTag;
@@ -21,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
+import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.animation.AnimationState;
@@ -38,12 +39,12 @@ public class OrihalconBeetle extends OrihalconEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private static final int MAX_LIFETIME = 200; // 10秒存在时间
     private int lifetime = 0;
-    @Nullable
-    private UUID ownerUUID;
     private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(OrihalconBeetle.class, EntityDataSerializers.OPTIONAL_UUID);
     // 弹开实体作用
     private boolean hasPushedEntities = false;
-
+    public int disappearTimer = 0;
+    public static final int DISAPPEAR_DURATION = 20; // 1秒消失时间
+    private boolean hasTriggeredTransformation = false; // 确保只触发一次变身
 
     public OrihalconBeetle(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
@@ -59,55 +60,95 @@ public class OrihalconBeetle extends OrihalconEntity {
             .thenLoop("idle"); // 循环播放空闲动画
 
     public static final RawAnimation ORIHALCON_DISAPPEAR = RawAnimation.begin()
-            .thenPlayAndHold("passTrough"); // 使用playAndHold
+            .thenPlayAndHold("passThrough"); // 使用playAndHold
 
-    public int disappearTimer = 0;
-    public static final int DISAPPEAR_DURATION = 20; // 1秒消失时间
-    private boolean hasTriggeredTransformation = false; // 确保只触发一次变身
-
+    private AnimationController<OrihalconBeetle> disappearController;
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this,
-                "main_controller",
-                0,
-                this::handleAnimations));
+
+
+
+        controllers.add(new AnimationController<>(this, "appear_controller", 0, this::handleAppearAnimation));
+        controllers.add(new AnimationController<>(this, "idle_controller", 0, this::handleIdleAnimation));
+        disappearController = new AnimationController<>(this, "disappear_controller", 0, this::handleDisappearAnimation);
+        controllers.add(disappearController);
     }
 
-    public enum AnimState { APPEARING, IDLING, DISAPPEARING }
-    public AnimState animState = AnimState.APPEARING;
+    private enum AnimState {APPEARING, IDLING, DISAPPEARING}
 
-    private PlayState handleAnimations(AnimationState<OrihalconBeetle> state) {
-        switch (animState) {
-            case APPEARING:
-                // 初始状态或需要播放出现动画
-                if (!state.isCurrentAnimation(ORIHALCON_APPEAR)) {
-                    state.getController().setAnimation(ORIHALCON_APPEAR);
-                }
-                // 检测动画是否完成
-                if (state.getController().getAnimationState() != AnimationController.State.STOPPED) {
-                    animState = AnimState.IDLING;
-                    state.getController().forceAnimationReset();
-                }
-                break;
+    private AnimState animState = AnimState.APPEARING;
 
-            case IDLING:
-                // 确保只设置一次空闲动画
-                if (!state.isCurrentAnimation(ORIHALCON_IDLE)) {
-                    state.getController().setAnimation(ORIHALCON_IDLE);
-                }
-                break;
+    // ========== 分离的动画处理函数 ==========
 
-            case DISAPPEARING:
-                // 确保只设置一次消失动画
-                if (!state.isCurrentAnimation(ORIHALCON_DISAPPEAR)) {
-                    if (state.getController().getAnimationState() != AnimationController.State.STOPPED) {
-                        state.getController().setAnimation(ORIHALCON_DISAPPEAR);
-                    }
-                }
-                break;
+    private PlayState handleAppearAnimation(AnimationState<OrihalconBeetle> state) {
+        // 只处理出现动画
+        if (animState != AnimState.APPEARING) {
+            return PlayState.STOP;
         }
+
+        if (!state.isCurrentAnimation(ORIHALCON_APPEAR)) {
+            state.getController().setAnimation(ORIHALCON_APPEAR);
+        }
+
+        // 动画结束后自动切换到空闲状态
+        if (state.getController().getAnimationState() == AnimationController.State.STOPPED) {
+            animState = AnimState.IDLING;
+        }
+
         return PlayState.CONTINUE;
+    }
+
+    private PlayState handleIdleAnimation(AnimationState<OrihalconBeetle> state) {
+        // 只处理空闲动画
+        if (animState != AnimState.IDLING) {
+            return PlayState.STOP;
+        }
+
+        if (!state.isCurrentAnimation(ORIHALCON_IDLE)) {
+            state.getController().setAnimation(ORIHALCON_IDLE);
+        }
+
+        return PlayState.CONTINUE;
+    }
+
+    private PlayState handleDisappearAnimation(AnimationState<OrihalconBeetle> state) {
+        // 只处理消失动画
+        if (animState != AnimState.DISAPPEARING) {
+            return PlayState.STOP;
+        }
+
+        if (!state.isCurrentAnimation(ORIHALCON_DISAPPEAR)) {
+            state.getController().setAnimation(ORIHALCON_DISAPPEAR);
+        }
+
+        return PlayState.CONTINUE;
+    }
+
+    // ========== 外部调用方法 ==========
+
+    public void triggerDisappearAnimation() {
+        // 确保控制器已初始化
+        if (disappearController == null) {
+            AnimatableInstanceCache cache = getAnimatableInstanceCache();
+            if (cache != null) {
+                AnimatableManager<GeoAnimatable> manager = cache.getManagerForId(getId());
+                if (manager != null) {
+                    disappearController = new AnimationController<>(
+                            this, "disappear_controller", 0, this::handleDisappearAnimation
+                    );
+                    manager.addController(disappearController);
+                }
+            }
+
+            if (disappearController == null) {
+                return;
+            }
+        }
+
+        this.animState = AnimState.DISAPPEARING;
+        this.disappearController.forceAnimationReset();
+        this.disappearTimer = DISAPPEAR_DURATION;
     }
 
     //==========功能==========
@@ -119,15 +160,12 @@ public class OrihalconBeetle extends OrihalconEntity {
 
         if (animState == AnimState.DISAPPEARING) {
             disappearTimer--;
-
-            // 动画结束后移除实体
             if (disappearTimer <= 0) {
                 this.discard();
                 return;
             }
         }
 
-        // 如果正在消失，跳过后续逻辑
         if (animState == AnimState.DISAPPEARING) {
             return;
         }
@@ -164,7 +202,7 @@ public class OrihalconBeetle extends OrihalconEntity {
             return;
         }
 
-        PlayerPersistentData data = owner.getData(ModAttachments.PLAYER_DATA);
+        RiderData data = owner.getData(RiderAttachments.RIDER_DATA);
         if (data.getHenshinState() != HenshinState.TRANSFORMING) {
             return;
         }
@@ -191,9 +229,9 @@ public class OrihalconBeetle extends OrihalconEntity {
 
     public void startDisappearing() {
         if (animState != AnimState.DISAPPEARING) {
-            animState = AnimState.DISAPPEARING;
+            triggerDisappearAnimation();
             disappearTimer = DISAPPEAR_DURATION;
-            hasTriggeredTransformation = true; // 确保不会再次触发变身
+            hasTriggeredTransformation = true;
 
             // 立即停止所有运动
             this.setDeltaMovement(Vec3.ZERO);
@@ -222,13 +260,6 @@ public class OrihalconBeetle extends OrihalconEntity {
         // 当透明度低于0.1时视为不可见
         return getCurrentAlpha() < 0.1f || super.isInvisible();
     }
-
-    @Override
-    public boolean shouldRenderAtSqrDistance(double distance) {
-        // 根据透明度调整渲染距离
-        return distance < (4096.0 * getCurrentAlpha());
-    }
-
 
     private boolean isPlayerColliding(Player player) {
         return player.getBoundingBox().intersects(this.getBoundingBox());
@@ -324,6 +355,7 @@ public class OrihalconBeetle extends OrihalconEntity {
             this.entityData.set(OWNER_UUID, Optional.of(tag.getUUID("OwnerUUID")));
         }
     }
+
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
@@ -342,6 +374,11 @@ public class OrihalconBeetle extends OrihalconEntity {
     @Override
     public void push(double x, double y, double z) {
         // 禁用所有外力推动
+    }
+
+    @Override
+    public boolean isCustomNameVisible() {
+        return false;
     }
 
     @Override

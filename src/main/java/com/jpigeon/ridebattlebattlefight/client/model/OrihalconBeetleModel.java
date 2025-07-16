@@ -8,12 +8,12 @@ import software.bernie.geckolib.model.GeoModel;
 public class OrihalconBeetleModel extends GeoModel<OrihalconBeetle> {
     @Override
     public ResourceLocation getModelResource(OrihalconBeetle animatable) {
-        return ResourceLocation.fromNamespaceAndPath(RideBattleBattleFight.MODID, "geo/orihalcon_beetle.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(RideBattleBattleFight.MODID, "geo/orihalcon_element.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(OrihalconBeetle animatable) {
-        return ResourceLocation.fromNamespaceAndPath(RideBattleBattleFight.MODID, "textures/entity/orihalcon_beetle.png");
+        return ResourceLocation.fromNamespaceAndPath(RideBattleBattleFight.MODID, "textures/entity/orihalcon/orihalcon_beetle.png");
     }
 
     @Override

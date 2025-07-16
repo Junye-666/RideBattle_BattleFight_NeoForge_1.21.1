@@ -2,7 +2,9 @@ package com.jpigeon.ridebattlebattlefight.core.item;
 
 import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
 
+import com.jpigeon.ridebattlebattlefight.core.item.card.CardItem;
 import com.jpigeon.ridebattlebattlefight.core.rider.blade.BladeArmorItem;
+import com.jpigeon.ridebattlebattlefight.core.rider.blade.BlayBuckleItem;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
@@ -19,7 +21,8 @@ public class BattleFightItems {
 
     //卡片
 
-
+    public static final DeferredItem<CardItem> SPADE_ACE = ITEMS.register("spade_ace_card",
+            CardItem::new);
     // 盔甲
 
     public static final DeferredItem<BladeArmorItem> BLADE_HELMET = ITEMS.register("blade_helmet",
@@ -30,8 +33,8 @@ public class BattleFightItems {
             () -> new BladeArmorItem(BoardArmorMaterials.BOARD_SYSTEM_MATERIAL, ArmorItem.Type.CHESTPLATE,
                     new Item.Properties().stacksTo(1)));
 
-    public static final DeferredItem<BladeArmorItem> BLAY_BUCKLE  = ITEMS.register("blay_buckle",
-            () -> new BladeArmorItem(BoardArmorMaterials.BOARD_SYSTEM_MATERIAL, ArmorItem.Type.LEGGINGS,
+    public static final DeferredItem<BlayBuckleItem> BLAY_BUCKLE  = ITEMS.register("blay_buckle",
+            () -> new BlayBuckleItem(BoardArmorMaterials.BOARD_SYSTEM_MATERIAL, ArmorItem.Type.LEGGINGS,
                     new Item.Properties().stacksTo(1)));
 
     public static final DeferredItem<BladeArmorItem> BLADE_BOOTS  = ITEMS.register("blade_boots",

@@ -20,5 +20,6 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(BattleFightItems.BLADE_HELMET.get());
         basicItem(BattleFightItems.BLADE_CHESTPLATE.get());
         basicItem(BattleFightItems.BLADE_BOOTS.get());
+        basicItem(BattleFightItems.SPADE_ACE.get());
     }
 }

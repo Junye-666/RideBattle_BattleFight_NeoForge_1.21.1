@@ -5,7 +5,7 @@ import com.jpigeon.ridebattlebattlefight.core.item.BattleFightItems;
 import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
 import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
-import com.jpigeon.ridebattlelib.core.system.henshin.helper.trigger.TriggerType;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -30,10 +30,9 @@ public class BladeConfig {
         RiderConfig KamenRiderBlade = new RiderConfig(KAMEN_RIDER_BLADE)
                 .setDriverItem(BattleFightItems.BLAY_BUCKLE.get(), EquipmentSlot.LEGS)
                 .addDriverSlot(BLAY_BUCKLE_CARD_SLOT,
-                        List.of(Items.IRON_INGOT),
+                        List.of(BattleFightItems.SPADE_ACE.get()),
                         true,
-                        false)
-                .setTriggerType(TriggerType.KEY);
+                        false);
 
         FormConfig bladeBaseForm = new FormConfig(BLADE_BASE_FORM)
                 .setArmor(BattleFightItems.BLADE_HELMET.get(),
@@ -57,8 +56,9 @@ public class BladeConfig {
                         0,
                         true
                 )
-                .addRequiredItem(BLAY_BUCKLE_CARD_SLOT, Items.IRON_INGOT)
-                .addGrantedItem(Items.IRON_SWORD.getDefaultInstance());
+                .addRequiredItem(BLAY_BUCKLE_CARD_SLOT, BattleFightItems.SPADE_ACE.get())
+                .addGrantedItem(Items.IRON_SWORD.getDefaultInstance())
+                .setTriggerType(TriggerType.KEY);
 
         KamenRiderBlade
                 .addForm(bladeBaseForm)

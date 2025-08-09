@@ -1,0 +1,75 @@
+package com.jpigeon.ridebattlebattlefight.core.rider.blade;
+
+import com.jpigeon.ridebattlebattlefight.RideBattleBattleFight;
+import com.jpigeon.ridebattlebattlefight.core.item.BattleFightItems;
+import com.jpigeon.ridebattlelib.core.system.form.FormConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderConfig;
+import com.jpigeon.ridebattlelib.core.system.henshin.RiderRegistry;
+import com.jpigeon.ridebattlelib.core.system.henshin.helper.TriggerType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.item.Items;
+
+import java.util.List;
+
+public class BladeConfig {
+    // 骑士Id
+    public static final ResourceLocation KAMEN_RIDER_BLADE =
+            ResourceLocation.fromNamespaceAndPath(RideBattleBattleFight.MODID, "kamen_rider_blade");
+    // 槽位
+    public static final ResourceLocation BLAY_BUCKLE_CARD_SLOT =
+            ResourceLocation.fromNamespaceAndPath(RideBattleBattleFight.MODID, "blay_buckle_card_slot");
+    // 形态Id
+    public static final ResourceLocation BLADE_BASE_FORM =
+            ResourceLocation.fromNamespaceAndPath(RideBattleBattleFight.MODID, "blade_base_form");
+
+    // 实际注册
+    public static void registerBlade() {
+        RiderConfig KamenRiderBlade = new RiderConfig(KAMEN_RIDER_BLADE)
+                .setDriverItem(BattleFightItems.BLAY_BUCKLE.get(), EquipmentSlot.LEGS)
+                .addDriverSlot(BLAY_BUCKLE_CARD_SLOT,
+                        List.of(BattleFightItems.SPADE_ACE.get()),
+                        true,
+                        false);
+
+        FormConfig bladeBaseForm = new FormConfig(BLADE_BASE_FORM)
+                .setArmor(BattleFightItems.BLADE_HELMET.get(),
+                        BattleFightItems.BLADE_CHESTPLATE.get(),
+                        null,
+                        BattleFightItems.BLADE_BOOTS.get())
+                .addAttribute(
+                        ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"),
+                        0.1,
+                        AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                )
+                .addEffect(
+                        MobEffects.NIGHT_VISION,
+                        114514,
+                        0,
+                        true
+                )
+                .addEffect(
+                        MobEffects.INVISIBILITY,
+                        114514,
+                        0,
+                        true
+                )
+                .addRequiredItem(BLAY_BUCKLE_CARD_SLOT, BattleFightItems.SPADE_ACE.get())
+                .addGrantedItem(Items.IRON_SWORD.getDefaultInstance())
+                .setTriggerType(TriggerType.KEY);
+
+        KamenRiderBlade
+                .addForm(bladeBaseForm)
+                .setBaseForm(bladeBaseForm.getFormId());
+        bladeBaseForm.setAllowsEmptyBelt(false);
+        bladeBaseForm.setShouldPause(true);
+
+        RiderRegistry.registerRider(KamenRiderBlade);
+    }
+
+    public static void init (){
+        registerBlade();
+    }
+}

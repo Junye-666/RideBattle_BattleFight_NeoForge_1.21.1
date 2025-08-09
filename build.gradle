@@ -19,6 +19,13 @@ group = mod_group_id
 
 repositories {
     mavenLocal()
+    maven {
+        name = 'GeckoLib'
+        url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content {
+            includeGroup("software.bernie.geckolib")
+        }
+    }
 }
 
 base {
@@ -134,7 +141,10 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-    implementation files("libs/ridebattlelib-0.9.1.jar")
+
+    implementation files("libs/ridebattlelib-0.9.6.jar")
+    implementation files("libs/player-animation-lib-forge-2.0.1+1.21.1.jar")
+    implementation "software.bernie.geckolib:geckolib-neoforge-${minecraft_version}:${geckolib_version}"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
@@ -188,4 +198,8 @@ idea {
         downloadSources = true
         downloadJavadoc = true
     }
+}
+
+jar{
+    from sourceSets.main.output
 }

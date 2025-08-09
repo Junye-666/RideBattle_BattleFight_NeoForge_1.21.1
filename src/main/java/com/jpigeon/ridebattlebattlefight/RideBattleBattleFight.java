@@ -1,5 +1,14 @@
 package com.jpigeon.ridebattlebattlefight;
 
+import com.jpigeon.ridebattlebattlefight.core.system.BoardEntities;
+import com.jpigeon.ridebattlebattlefight.client.model.OrihalconBeetleModel;
+import com.jpigeon.ridebattlebattlefight.client.renderer.OrihalconBeetleRenderer;
+import com.jpigeon.ridebattlebattlefight.core.system.BoardHenshinHandler;
+import com.jpigeon.ridebattlebattlefight.core.item.BattleFightItems;
+import com.jpigeon.ridebattlebattlefight.core.system.network.BoardPacketHandler;
+import com.jpigeon.ridebattlebattlefight.core.rider.blade.BladeConfig;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -19,21 +28,29 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
 @Mod(RideBattleBattleFight.MODID)
 public class RideBattleBattleFight {
-    public static final String MODID = "examplemod";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final String MODID = "ridebattlebattlefight";
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public RideBattleBattleFight(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(BoardPacketHandler::register);
 
         NeoForge.EVENT_BUS.register(this);
+
+        BattleFightItems.register(modEventBus);
+        BoardEntities.register(modEventBus);
+
+        NeoForge.EVENT_BUS.register(new BoardHenshinHandler());
 
         modEventBus.addListener(this::addCreative);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+
+        NeoForge.EVENT_BUS.addListener(this::onServerStarting);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        LOGGER.info("HELLO FROM COMMON SETUP");
+
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
@@ -41,12 +58,27 @@ public class RideBattleBattleFight {
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
+
     }
 
     @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
+            BladeConfig.init();
+        }
+
+        @SubscribeEvent
+        public static void registerAttributes(EntityAttributeCreationEvent event) {
+            BoardEntities.registerAttributes(event);
+        }
+
+        @SubscribeEvent
+        public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+            event.registerEntityRenderer(
+                    BoardEntities.ORIHALCON_BEETLE.get(),
+                    context -> new OrihalconBeetleRenderer(context, new OrihalconBeetleModel())
+            );
         }
     }
 }
